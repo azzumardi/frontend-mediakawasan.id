@@ -8,5 +8,8 @@ export default function Page(props: WordPressTemplateProps) {
 }
 
 export const getStaticProps: GetStaticProps = (ctx) => {
-	return getWordPressProps({ ctx, revalidate: REVALIDATE_TIME })
+	return getWordPressProps({ ctx, revalidate: REVALIDATE_TIME }).catch((error) => {
+		console.error('Failed to fetch WordPress homepage data.', error)
+		return { notFound: true as const, revalidate: REVALIDATE_TIME }
+	})
 }
