@@ -85,6 +85,11 @@ export default function Footer({ menuItems }: Props) {
 							</a>
 						))}
 					</div>
+					<div className="flex flex-wrap gap-x-6 gap-y-3 md:order-2">
+						<a href="mailto:ardi271@gmail.com" className="relative block">
+							Develop by Ardlabs Indonesia
+						</a>
+					</div>
 					<p
 						className="rights_reserved_text mt-8 text-[13px] leading-5 text-neutral-500 md:order-1 md:mt-0"
 						dangerouslySetInnerHTML={{
