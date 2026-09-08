@@ -1,6 +1,14 @@
 'use client'
 
-import { FC, forwardRef, useEffect, useRef, useState } from 'react'
+import {
+	FC,
+	Fragment,
+	forwardRef,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import Tag from '@/components/Tag/Tag'
 import SingleAuthor from './SingleAuthor'
 import useIntersectionObserver from '@/hooks/useIntersectionObserver'
@@ -19,6 +27,7 @@ import { useMusicPlayer } from '@/hooks/useMusicPlayer'
 import { flatListToHierarchical } from '@faustwp/core'
 import MyWordPressBlockViewer from '@/components/MyWordPressBlockViewer'
 import { ContentBlock } from '@faustwp/blocks/dist/mjs/components/WordPressBlocksViewer'
+import AdSpace from '@/components/AdSpace/AdSpace'
 
 export interface SingleContentProps {
 	post: GetPostSiglePageQuery['post']
@@ -57,6 +66,22 @@ const SingleContent: FC<SingleContentProps> = ({ post }) => {
 			parentKey: 'parentClientId',
 		})
 	}
+	const blocksWithAds = useMemo(() => {
+		const nonNullBlocks = blocks.filter(Boolean)
+		if (!nonNullBlocks.length) {
+			return [] as (ContentBlock | null)[][]
+		}
+		if (nonNullBlocks.length <= 3) {
+			return [nonNullBlocks]
+		}
+
+		const chunkSize = 3
+		const chunks: (ContentBlock | null)[][] = []
+		for (let i = 0; i < nonNullBlocks.length; i += chunkSize) {
+			chunks.push(nonNullBlocks.slice(i, i + chunkSize))
+		}
+		return chunks
+	}, [blocks])
 	//
 
 	useEffect(() => {
@@ -131,7 +156,20 @@ const SingleContent: FC<SingleContentProps> = ({ post }) => {
 					className="prose mx-auto max-w-screen-md lg:prose-lg dark:prose-invert"
 					ref={contentRef}
 				>
-					<MyWordPressBlockViewer blocks={blocks} />
+					{blocksWithAds.map((chunk, index) => (
+						<Fragment key={`article-chunk-${index}`}>
+							<MyWordPressBlockViewer blocks={chunk} />
+							{index < blocksWithAds.length - 1 ? (
+								<AdSpace
+									zone="in_article"
+									index={index}
+									className="my-10"
+									wrapperClassName="mx-auto max-w-screen-md"
+									placementClassName="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800"
+								/>
+							) : null}
+						</Fragment>
+					))}
 				</div>
 
 				{/* TAGS */}

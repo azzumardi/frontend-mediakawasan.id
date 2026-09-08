@@ -9,6 +9,7 @@ import useGetPostsNcmazMetaByIds from '@/hooks/useGetPostsNcmazMetaByIds'
 import useHandleGetPostsArchivePage from '@/hooks/useHandleGetPostsArchivePage'
 import dynamic from 'next/dynamic'
 import { FC } from 'react'
+import AdSpace from '@/components/AdSpace/AdSpace'
 
 const DynamicModalCategories = dynamic(
 	() => import('@/components/ModalCategories'),
@@ -70,6 +71,7 @@ const ArchiveLayout: FC<IArchiveLayoutProps> = ({
 			<div className={`ncmazfc-page-category`}>
 				{/* HEADER */}
 				{children}
+				<AdSpace zone="index_top" className="container mt-6 lg:mt-10" />
 				{/* ====================== END HEADER ====================== */}
 
 				<div className="container space-y-16 pb-16 pt-10 lg:space-y-28 lg:pb-28 lg:pt-20">
@@ -94,6 +96,7 @@ const ArchiveLayout: FC<IArchiveLayoutProps> = ({
 							showLoadmore={hasNextPage}
 							onClickLoadmore={handleClickShowMore}
 						/>
+						<AdSpace zone="index_bottom" className="mt-10" />
 					</div>
 
 					{/* MORE SECTIONS */}

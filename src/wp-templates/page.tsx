@@ -8,6 +8,7 @@ import { FaustTemplate, flatListToHierarchical } from '@faustwp/core'
 import { FOOTER_LOCATION, PRIMARY_LOCATION } from '@/contains/menu'
 import PageLayout from '@/container/PageLayout'
 import MyWordPressBlockViewer from '@/components/MyWordPressBlockViewer'
+import AdSpace from '@/components/AdSpace/AdSpace'
 
 const Page: FaustTemplate<GetPageQuery> = (props) => {
 	// LOADING ----------
@@ -21,6 +22,7 @@ const Page: FaustTemplate<GetPageQuery> = (props) => {
 
 	const isGutenbergPage =
 		!!props.__SEED_NODE__?.isFrontPage || ncPageMeta?.isFullWithPage
+	const showIndexAds = !!props.__SEED_NODE__?.isFrontPage
 
 	const blocks = flatListToHierarchical(editorBlocks as any, {
 		idKey: 'clientId',
@@ -29,7 +31,7 @@ const Page: FaustTemplate<GetPageQuery> = (props) => {
 
 	return (
 		<>
-			<PageLayout
+		<PageLayout
 				headerMenuItems={props.data?.primaryMenuItems?.nodes || []}
 				footerMenuItems={props.data?.footerMenuItems?.nodes || []}
 				pageFeaturedImageUrl={featuredImage?.node?.sourceUrl}
@@ -38,6 +40,7 @@ const Page: FaustTemplate<GetPageQuery> = (props) => {
 					props.data?.generalSettings as NcgeneralSettingsFieldsFragmentFragment
 				}
 			>
+				{showIndexAds && <AdSpace zone="index_top" className="container pt-6" />}
 				<div className="nc-BgGlassmorphism absolute inset-x-0 z-[-1] flex min-h-0 overflow-hidden py-24 pl-20 md:top-10 xl:top-20">
 					<span className="block h-72 w-72 rounded-full bg-[#ef233c] opacity-10 mix-blend-multiply blur-3xl filter lg:h-96 lg:w-96"></span>
 					<span className="nc-animation-delay-2000 -ml-20 mt-40 block h-72 w-72 rounded-full bg-[#04868b] opacity-10 mix-blend-multiply blur-3xl filter lg:h-96 lg:w-96"></span>
@@ -69,6 +72,7 @@ const Page: FaustTemplate<GetPageQuery> = (props) => {
 						<MyWordPressBlockViewer blocks={blocks} />
 					</main>
 				</div>
+				{showIndexAds && <AdSpace zone="index_bottom" className="container pb-10" />}
 			</PageLayout>
 		</>
 	)

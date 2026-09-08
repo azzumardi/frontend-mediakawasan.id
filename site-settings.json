@@ -18,7 +18,7 @@
 		"features_list": ["Create a free account.", "Write your stories."]
 	},
 	"top_banner": {
-		"enable": true,
+		"enable": false,
 		"description": "-50% Intro price for the next 72 hours only!.",
 		"end_link": {
 			"url": "https://themeforest.net/item/ncmaz-nextjs-headless-wordpress-blog-magazine/47815656",

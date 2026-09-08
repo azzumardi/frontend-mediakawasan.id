@@ -8,6 +8,7 @@ import Banner from '@/components/Banner'
 import { NC_SITE_SETTINGS } from '@/contains/site-settings'
 import MainNav1 from '@/components/Header/MainNav1'
 import { createGlobalState } from 'react-hooks-global-state'
+import AdSpace from '@/components/AdSpace/AdSpace'
 
 const headerStyle = NC_SITE_SETTINGS.site_header?.desktop_header?.header_style
 const initialState = { headerStyle }
@@ -60,6 +61,8 @@ const SiteHeader: FC<Props> = ({ menuItems, siteDescription, siteTitle }) => {
 	return (
 		<>
 			<Banner />
+
+			<AdSpace zone="header" className="border-b border-neutral-100 dark:border-neutral-800" />
 
 			<div className="sticky top-0 z-30 w-full">{renderHeader()}</div>
 		</>
