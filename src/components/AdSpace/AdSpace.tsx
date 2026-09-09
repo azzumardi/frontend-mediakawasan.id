@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import {
 	AdPlacement,
 	AdProvider,
@@ -8,6 +8,7 @@ import {
 	getAdSlot,
 	resolvePlacement,
 } from '@/contains/advertising'
+import { AdvertisingContext } from '@/container/AdvertisingProvider'
 import AdSenseUnit from './AdSenseUnit'
 import CustomBannerAd from './CustomBannerAd'
 import CustomHtmlAd from './CustomHtmlAd'
@@ -39,7 +40,16 @@ const AdSpace: FC<Props> = ({
 	wrapperClassName = '',
 	placementClassName = '',
 }) => {
-	const slot = getAdSlot(zone, index)
+	// Subscribe to advertising context for reactivity.
+	// When GraphQL data loads, the context updates and triggers re-render.
+	const { enabled, loading } = useContext(AdvertisingContext)
+
+	const slot = useMemo(() => {
+		if (!enabled) {
+			return null
+		}
+		return getAdSlot(zone, index)
+	}, [enabled, loading, zone, index])
 
 	const desktopPlacement = useMemo(
 		() => (slot ? resolvePlacement(slot, 'desktop') : null),

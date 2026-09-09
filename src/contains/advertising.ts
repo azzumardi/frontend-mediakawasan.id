@@ -1,5 +1,7 @@
 import { NC_SITE_SETTINGS } from '@/contains/site-settings'
 
+// ─── Zone Keys ──────────────────────────────────────────────────────────────
+
 export const AD_SPACE_ZONES = [
 	'header',
 	'index_top',
@@ -14,6 +16,44 @@ export const AD_SPACE_ZONES = [
 export type AdSpaceZone = (typeof AD_SPACE_ZONES)[number] | (string & {})
 
 export type AdProvider = 'adsense' | 'custom_banner' | 'custom_html'
+
+// ─── GraphQL Response Types (matches WPGraphQL schema from plugin) ──────────
+
+export type GQLAdPlacement = {
+	enabled: boolean | null
+	provider: string | null
+	linkUrl: string | null
+	adsenseClient: string | null
+	adsenseSlot: string | null
+	image: {
+		sourceUrl: string | null
+		altText: string | null
+	} | null
+	customHtml: string | null
+	width: string | null
+	height: string | null
+}
+
+export type GQLAdSlot = {
+	key: string | null
+	label: string | null
+	enabled: boolean | null
+	priority: number | null
+	provider: string | null
+	openInNewTab: boolean | null
+	nofollowSponsored: boolean | null
+	startDate: string | null
+	endDate: string | null
+	desktop: GQLAdPlacement | null
+	mobile: GQLAdPlacement | null
+}
+
+export type GQLAdvertisingSettings = {
+	enabled: boolean | null
+	slots: (GQLAdSlot | null)[] | null
+}
+
+// ─── Internal Ad Config Types ──────────────────────────────────────────────
 
 export type AdPlacement = {
 	enabled?: boolean
@@ -38,6 +78,8 @@ export type AdSlotConfig = {
 	enabled?: boolean
 	priority?: number | null
 	provider?: AdProvider
+	openInNewTab?: boolean
+	nofollowSponsored?: boolean
 	desktop?: AdPlacement | null
 	mobile?: AdPlacement | null
 	placement?: AdPlacement | null
@@ -50,16 +92,72 @@ type AdvertisingSettings = {
 	slots?: Record<string, AdSlotConfig | AdSlotConfig[]>
 }
 
-const settings = (NC_SITE_SETTINGS as any).advertising as
+// ─── Static Fallback Settings ──────────────────────────────────────────────
+
+const staticSettings = (NC_SITE_SETTINGS as any).advertising as
 	| AdvertisingSettings
 	| undefined
 
-export const isAdvertisingEnabled = () => {
-	if (process.env.NEXT_PUBLIC_ENABLE_ADS === 'false') {
-		return false
+// ─── Runtime State (populated by AdvertisingProvider) ───────────────────────
+
+let _graphqlSlots: AdSlotConfig[] = []
+let _graphqlEnabled = false
+let _graphqlLoaded = false
+
+/**
+ * Called by AdvertisingProvider after GraphQL fetch.
+ * Stores normalized ad slot data for synchronous access by getAdSlots/getAdSlot.
+ */
+export const setAdvertisingData = (
+	enabled: boolean,
+	slots: AdSlotConfig[],
+) => {
+	_graphqlEnabled = enabled
+	_graphqlSlots = slots
+	_graphqlLoaded = true
+}
+
+export const isAdvertisingDataLoaded = () => _graphqlLoaded
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Normalize a GQLAdSlot into an AdSlotConfig.
+ */
+export const normalizeGQLSlot = (slot: GQLAdSlot): AdSlotConfig | null => {
+	if (!slot.key) {
+		return null
 	}
 
-	return settings?.enable ?? true
+	const mapPlacement = (p: GQLAdPlacement | null): AdPlacement | null => {
+		if (!p) {
+			return null
+		}
+		return {
+			enabled: p.enabled ?? false,
+			provider: (p.provider as AdProvider) || undefined,
+			adsenseClient: p.adsenseClient || null,
+			adsenseSlot: p.adsenseSlot || null,
+			imageUrl: p.image?.sourceUrl || null,
+			imageAlt: p.image?.altText || null,
+			linkUrl: p.linkUrl || null,
+			customHtml: p.customHtml || null,
+			width: p.width || null,
+			height: p.height || null,
+		}
+	}
+
+	return {
+		key: slot.key as AdSpaceZone,
+		label: slot.label || null,
+		enabled: slot.enabled ?? true,
+		priority: slot.priority ?? 10,
+		provider: (slot.provider as AdProvider) || undefined,
+		openInNewTab: slot.openInNewTab ?? false,
+		nofollowSponsored: slot.nofollowSponsored ?? false,
+		desktop: mapPlacement(slot.desktop),
+		mobile: mapPlacement(slot.mobile),
+	}
 }
 
 const normalizeSlotValue = (
@@ -81,14 +179,42 @@ const normalizeSlotValue = (
 		.filter((item) => item.enabled ?? true)
 }
 
+// ─── Public API ─────────────────────────────────────────────────────────────
+
+export const isAdvertisingEnabled = () => {
+	if (process.env.NEXT_PUBLIC_ENABLE_ADS === 'false') {
+		return false
+	}
+
+	// Prefer GraphQL data if loaded.
+	if (_graphqlLoaded) {
+		return _graphqlEnabled
+	}
+
+	// Fallback to static settings.
+	return staticSettings?.enable ?? true
+}
+
+/**
+ * Get all ad slots for a given zone.
+ * Prefers GraphQL data (set by AdvertisingProvider), falls back to static config.
+ */
 export const getAdSlots = (zone: AdSpaceZone) => {
 	if (!isAdvertisingEnabled()) {
 		return [] as AdSlotConfig[]
 	}
 
-	const fromZones = settings?.zones?.[zone]
-	const fromSlots = settings?.slots?.[zone]
-	const fromList = settings?.adSpaces?.filter((item) => item.key === zone)
+	// Prefer GraphQL data if available.
+	if (_graphqlLoaded && _graphqlSlots.length > 0) {
+		return _graphqlSlots
+			.filter((slot) => slot.key === zone)
+			.sort((a, b) => (b.priority || 0) - (a.priority || 0))
+	}
+
+	// Fallback to static settings.
+	const fromZones = staticSettings?.zones?.[zone]
+	const fromSlots = staticSettings?.slots?.[zone]
+	const fromList = staticSettings?.adSpaces?.filter((item) => item.key === zone)
 
 	return normalizeSlotValue(zone, fromZones ?? fromSlots ?? fromList)
 		.sort((a, b) => (b.priority || 0) - (a.priority || 0))

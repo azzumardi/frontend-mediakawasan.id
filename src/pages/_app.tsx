@@ -9,6 +9,7 @@ import { WordPressBlocksProvider, fromThemeJson } from '@faustwp/blocks'
 import blocks from '@/wp-blocks'
 import { Poppins } from 'next/font/google'
 import SiteWrapperProvider from '@/container/SiteWrapperProvider'
+import AdvertisingProvider from '@/container/AdvertisingProvider'
 import { Toaster } from 'react-hot-toast'
 import NextNProgress from 'nextjs-progressbar'
 import themeJson from '@/../theme.json'
@@ -34,7 +35,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 						theme: fromThemeJson(themeJson),
 					}}
 				>
-					<SiteWrapperProvider {...pageProps}>
+				<SiteWrapperProvider {...pageProps}>
+					<AdvertisingProvider>
 						<style jsx global>{`
 							html {
 								font-family: ${poppins.style.fontFamily};
@@ -52,7 +54,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 							}}
 							containerClassName="text-sm"
 						/>
-					</SiteWrapperProvider>
+					</AdvertisingProvider>
+				</SiteWrapperProvider>
 				</WordPressBlocksProvider>
 			</FaustProvider>
 		</>
